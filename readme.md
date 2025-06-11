@@ -1,8 +1,3 @@
-Perfeito, Rafael — vou agora te enviar o conteúdo *puro* do `README.md` **em markdown**, exatamente como um arquivo `.md`, pronto para você copiar e colar.
-
----
-
-````markdown
 # 📦 ranetium-cli
 
 > **Ranetium CLI** — scaffolding inteligente, rápido e padronizado para iniciar e manter projetos com a stack Ranetium.
@@ -152,19 +147,4 @@ Envie PRs ou abra Issues para sugerir melhorias.
 
 **by [Ranetium](https://github.com/RSouzaD3v)**
 
-```
-
----
-
-Pronto.  
-Agora sim, **markdown puro**, do jeito que o GitHub vai interpretar no seu repositório do `ranetium-cli`.
-
----
-
-👉 Se quiser agora, seguimos com:
-
-- **empacotamento final completo do CLI para publicação no NPM**
-- ou **começamos a estruturar o `fullstack-next` template** para seu próximo nível.
-
-Me dá o comando e seguimos! 🚀
 ```
