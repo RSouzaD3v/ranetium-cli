@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { runGenerateModule } from './generate-module'
+import { runGenerateModule } from './generate-module.js'
 
 export function runGenerateResource(name: string) {
   if (!name) {

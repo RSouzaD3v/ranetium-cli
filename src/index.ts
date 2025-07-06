@@ -1,69 +1,113 @@
 #!/usr/bin/env node
 
-import chalk from 'chalk'
+import inquirer from 'inquirer';
+import chalk from 'chalk';
 
-import { runInit } from './commands/init'
-import { runGenerateModule } from './commands/generate-module'
-import { runGenerateResource } from './commands/generate-resource'
-import { runGenerateSchema } from './commands/generate-schema'
-import { runAddAuth } from './commands/add-auth'
-import { runUpdate } from './commands/update'
+import { runInit } from './commands/init.js';
+import { runGenerateModule } from './commands/generate-module.js';
+import { runGenerateResource } from './commands/generate-resource.js';
+import { runGenerateSchema } from './commands/generate-schema.js';
+import { runAddAuth } from './commands/add-auth.js';
+import { runUpdate } from './commands/update.js';
 
-import { parseArgs } from 'node:util'
+import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const args = process.argv.slice(2)
-const command = args[0]
-const subcommand = args[1]
-const param = args[2]
-
-if (args.includes('--version') || args.includes('-v')) {
-  const pkg = require('../package.json')
-  console.log(`Ranetium CLI v${pkg.version}`)
-  process.exit(0)
+// Helper para ler versão
+async function getVersion() {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const pkgJson = JSON.parse(await readFile(join(__dirname, '../package.json'), 'utf8'));
+  return pkgJson.version;
 }
 
-switch (command) {
-  case 'init': {
-    const options = parseArgs({
-      args: process.argv.slice(3),
-      options: {
-        template: { type: 'string' },
-      },
-      allowPositionals: true
-    })
-    runInit(subcommand, options.values)
-    break
+// App principal
+async function main() {
+  const version = await getVersion();
+
+  console.log(chalk.bold.cyan(`\n🛠️  Ranetium CLI v${version}\n`));
+
+  const { mainCommand } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'mainCommand',
+      message: 'O que você deseja fazer?',
+      choices: [
+        { name: '📦 Iniciar novo projeto', value: 'init' },
+        { name: '⚙️ Gerar módulo (controller + service)', value: 'generateModule' },
+        { name: '🗂️ Gerar resource (módulo + model)', value: 'generateResource' },
+        { name: '📜 Gerar schema (Zod)', value: 'generateSchema' },
+        { name: '🔐 Adicionar Auth', value: 'addAuth' },
+        { name: '⬆️ Atualizar Pacotes Ranetium', value: 'update' },
+        { name: '❌ Sair', value: 'exit' },
+      ],
+    },
+  ]);
+
+  switch (mainCommand) {
+    case 'init':
+      await handleInit();
+      break;
+
+    case 'generateModule':
+      await handleGenerate(runGenerateModule);
+      break;
+
+    case 'generateResource':
+      await handleGenerate(runGenerateResource);
+      break;
+
+    case 'generateSchema':
+      await handleGenerate(runGenerateSchema);
+      break;
+
+    case 'addAuth':
+      await runAddAuth();
+      break;
+
+    case 'update':
+      await runUpdate();
+      break;
+
+    case 'exit':
+    default:
+      console.log(chalk.gray('Saindo...'));
+      process.exit(0);
   }
-
-  case 'generate':
-    if (subcommand === 'module') runGenerateModule(param)
-    else if (subcommand === 'resource') runGenerateResource(param)
-    else if (subcommand === 'schema') runGenerateSchema(param)
-    else help()
-    break
-
-  case 'add':
-    if (subcommand === 'auth') runAddAuth()
-    else help()
-    break
-
-  case 'update':
-    runUpdate()
-    break
-
-  default:
-    help()
-    break
 }
 
-function help() {
-  console.log(chalk.bold('\n🛠 Ranetium CLI - Comandos disponíveis:\n'))
-  console.log(`${chalk.cyan('init')} <nome> [--template nome]  → Inicia novo projeto com template`)
-  console.log(`${chalk.cyan('generate module')} <nome>        → Gera novo módulo (controller + service)`)
-  console.log(`${chalk.cyan('generate resource')} <nome>      → Gera módulo + model`)
-  console.log(`${chalk.cyan('generate schema')} <nome>        → Gera schema Zod`)
-  console.log(`${chalk.cyan('add auth')}                     → Adiciona estrutura de auth`)
-  console.log(`${chalk.cyan('update')}                        → Atualiza pacotes Ranetium`)
-  console.log('')
-  process.exit(0)
+// Funções auxiliares para cada fluxo
+
+async function handleInit() {
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'projectName',
+      message: 'Nome do projeto:',
+      validate: (input) => input ? true : 'Informe um nome válido.',
+    },
+    {
+      type: 'input',
+      name: 'template',
+      message: 'Template (opcional):',
+    },
+  ]);
+
+  await runInit(answers.projectName, { template: answers.template });
 }
+
+async function handleGenerate(generatorFn: (name: string) => void) {
+  const { name } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Nome:',
+      validate: (input) => input ? true : 'Informe um nome válido.',
+    },
+  ]);
+
+  await generatorFn(name);
+}
+
+// Start
+main();
